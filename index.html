@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerador de Currículo Vitae Profissional</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; color: #1e293b; }
+    
+    /* Folha A4 com o zoom original */
+    .cv-page {
+      width: 210mm;
+      height: 297mm;
+      max-height: 297mm;
+      padding: 15mm 20mm;
+      background: white;
+      box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.1), 0 5px 15px -5px rgba(0, 0, 0, 0.04);
+      margin: 0 auto;
+      font-family: 'Times New Roman', Times, serif;
+      color: #000;
+      box-sizing: border-box;
+      line-height: 1.3;
+      overflow: hidden;
+    }
+    .cv-section-title {
+      border: 1px solid #000;
+      background-color: #f1f5f9;
+      text-align: center;
+      font-weight: bold;
+      font-size: 14px;
+      padding: 2px 0;
+      margin-top: 10px;
+      margin-bottom: 6px;
+    }
+    .cv-photo-box { width: 26mm; height: 34mm; border: 1px solid #64748b; object-fit: cover; }
+
+    /* Zoom original preservado para telas pequenas */
+    @media (max-width: 768px) {
+      .cv-preview-container { transform-origin: top left; zoom: 0.48; }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- Header Redenhido com Tipografia Profissional e Elegante -->
+  <header class="bg-slate-900 text-white shadow-md sticky top-0 z-30 border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 py-4 md:py-5 flex justify-between items-center">
+      <div class="flex items-center gap-3.5">
+        <div class="bg-gradient-to-br from-blue-600 to-blue-700 p-2.5 rounded-2xl text-white shadow-md shadow-blue-900/30">
+          <i class="fa-solid fa-file-lines text-lg md:text-xl"></i>
+        </div>
+        <div>
+          <h1 class="font-extrabold text-base md:text-xl tracking-tight text-white leading-tight">Criador de Currículo Profissional</h1>
+          <p class="text-xs md:text-sm font-medium text-slate-400 mt-0.5">Preencha, visualize e baixe seu currículo pronto em minutos</p>
+        </div>
+      </div>
+      <div class="hidden md:flex items-center gap-2">
+        <span class="text-xs font-semibold text-emerald-400 bg-emerald-950/60 px-3.5 py-1.5 rounded-full border border-emerald-800/40 flex items-center gap-1.5 shadow-sm">
+          <i class="fa-solid fa-shield-halved"></i> 100% Seguro
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Abas de Navegação Mobile -->
+  <div class="md:hidden bg-white border-b border-slate-200 flex sticky top-[68px] z-20 shadow-sm">
+    <button id="tab-edit" onclick="switchTab('edit')" class="flex-1 py-3.5 text-center text-xs font-bold text-blue-600 border-b-2 border-blue-600 flex justify-center items-center gap-2 transition bg-blue-50/50">
+      <i class="fa-solid fa-pen-to-square text-sm"></i> 1. Preencher Dados
+    </button>
+    <button id="tab-preview" onclick="switchTab('preview')" class="flex-1 py-3.5 text-center text-xs font-bold text-slate-500 flex justify-center items-center gap-2 transition">
+      <i class="fa-solid fa-eye text-sm"></i> 2. Ver Currículo & Baixar
+    </button>
+  </div>
+
+  <main class="max-w-7xl mx-auto w-full p-3 md:p-6 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- Formulário Principal -->
+    <section id="form-container" class="lg:col-span-5 bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-slate-200/80 space-y-6 overflow-y-auto max-h-[calc(100vh-110px)]">
+      
+      <div class="bg-blue-50/70 border border-blue-100 p-4 rounded-xl flex items-start gap-3">
+        <i class="fa-solid fa-circle-info text-blue-600 text-sm mt-0.5"></i>
+        <p class="text-xs text-blue-950 font-medium leading-relaxed">Preencha os campos abaixo. O seu currículo é atualizado automaticamente em tempo real!</p>
+      </div>
+
+      <div class="space-y-2">
+        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Foto de Perfil (3x4)</label>
+        <div class="flex items-center gap-4 bg-slate-50/80 p-3.5 rounded-xl border border-slate-200/80">
+          <img id="form-photo-preview" src="https://via.placeholder.com/150?text=Foto" class="w-14.5 h-18 object-cover rounded-lg border border-slate-300 shadow-sm">
+          <div>
+            <label class="cursor-pointer bg-white hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-xl border border-slate-300 text-xs font-bold transition shadow-sm flex items-center gap-2">
+              <i class="fa-solid fa-camera text-blue-600"></i> Escolher Foto
+              <input type="file" id="input-photo" accept="image/*" class="hidden" onchange="handlePhotoUpload(event)">
+            </label>
+            <p class="text-[11px] text-slate-400 mt-1 font-medium">Recomendado vertical (3x4)</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Informações Pessoais -->
+      <div class="space-y-3">
+        <h3 class="text-sm font-bold text-slate-900 border-b pb-2 flex items-center gap-2">
+          <i class="fa-solid fa-user text-blue-600"></i> Informações Pessoais
+        </h3>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Nome Completo</label>
+          <input type="text" id="input-nome" value="João da Silva Santos" oninput="updateCV()" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs md:text-sm font-medium outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Estado Civil</label>
+            <input type="text" id="input-estado-civil" value="Solteiro" oninput="updateCV()" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs md:text-sm font-medium outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Nacionalidade</label>
+            <input type="text" id="input-nacionalidade" value="Brasileiro" oninput="updateCV()" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs md:text-sm font-medium outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Endereço (Rua, nº)</label>
+          <input type="text" id="input-endereco" value="Rua das Flores, nº 123" oninput="updateCV()" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs md:text-sm font-medium outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">CEP</label>
+            <input type="text" id="input-cep" value="01001-000" oninput="updateCV()" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs md:text-sm font-medium outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Bairro</label>
+            <input type="text" id="input-bairro" value="Centro" oninput="updateCV()" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs md:text-sm font-medium outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Telefone / WhatsApp</label>
+            <input type="text" id="input-telefone" value="(11) 98765-4321" oninput="updateCV()" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs md:text-sm font-medium outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">E-mail</label>
+            <input type="email" id="input-email" value="joao.silva@exemplo.com" oninput="updateCV()" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs md:text-sm font-medium outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
+          </div>
+        </div>
+      </div>
+
+      <!-- Escolaridade -->
+      <div class="space-y-3">
+        <h3 class="text-sm font-bold text-slate-900 border-b pb-2 flex items-center gap-2">
+          <i class="fa-solid fa-graduation-cap text-blue-600"></i> Escolaridade & Formação
+        </h3>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Nível de Escolaridade</label>
+          <select id="select-escolaridade" onchange="toggleSuperiorFields()" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs md:text-sm font-medium outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
+            <option value="Ensino Fundamental Incompleto">Ensino Fundamental Incompleto</option>
+            <option value="Ensino Fundamental Completo">Ensino Fundamental Completo</option>
+            <option value="Ensino Médio Incompleto">Ensino Médio Incompleto</option>
+            <option value="Ensino Médio Completo" selected>Ensino Médio Completo</option>
+            <option value="Ensino Superior Cursando">Ensino Superior Cursando</option>
+            <option value="Ensino Superior Incompleto">Ensino Superior Incompleto</option>
+            <option value="Ensino Superior Completo">Ensino Superior Completo</option>
+          </select>
+        </div>
+
+        <div id="superior-fields" class="space-y-3 p-3.5 bg-slate-50 border border-slate-200 rounded-xl hidden">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 mb-1">Nome do Curso Superior</label>
+            <input type="text" id="input-curso-sup" value="Administração" oninput="updateCV()" class="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-xs font-medium outline-none">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 mb-1">Instituição de Ensino</label>
+            <input type="text" id="input-instituicao" value="Universidade Exemplo" oninput="updateCV()" class="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-xs font-medium outline-none">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 mb-1">Período / Ano</label>
+            <input type="text" id="input-periodo" value="cursando" oninput="updateCV()" class="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-xs font-medium outline-none">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Categoria da CNH (Opcional)</label>
+          <input type="text" id="input-cnh" value="AB" oninput="updateCV()" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs md:text-sm font-medium outline-none">
+        </div>
+      </div>
+
+      <!-- Cursos -->
+      <div class="space-y-3">
+        <div class="flex justify-between items-center border-b pb-2">
+          <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-certificate text-blue-600"></i> Cursos
+          </h3>
+          <button onclick="addCurso()" class="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 px-3.5 py-1.5 rounded-xl font-bold transition border border-blue-200/80 shadow-sm">+ Adicionar</button>
+        </div>
+        <div id="cursos-list" class="space-y-2.5"></div>
+      </div>
+
+      <!-- Experiência Profissional -->
+      <div class="space-y-3">
+        <div class="flex justify-between items-center border-b pb-2">
+          <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-briefcase text-blue-600"></i> Experiência Profissional
+          </h3>
+          <button onclick="addExperiencia()" class="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 px-3.5 py-1.5 rounded-xl font-bold transition border border-blue-200/80 shadow-sm">+ Adicionar</button>
+        </div>
+        <div id="experiencias-list" class="space-y-3"></div>
+      </div>
+
+      <!-- Objetivo Profissional -->
+      <div class="space-y-3">
+        <h3 class="text-sm font-bold text-slate-900 border-b pb-2 flex items-center gap-2">
+          <i class="fa-solid fa-bullseye text-blue-600"></i> Objetivo Profissional
+        </h3>
+        <textarea id="input-objetivo" rows="3" oninput="updateCV()" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs md:text-sm font-medium outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">Em busca de uma oportunidade para desenvolver e aplicar meus conhecimentos profissionais, contribuindo para o crescimento da empresa e o desenvolvimento mútuo.</textarea>
+      </div>
+
+      <!-- Botão de Conclusão no final do formulário -->
+      <div class="pt-4 border-t border-slate-100">
+        <button onclick="switchTab('preview')" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 px-4 rounded-2xl font-extrabold text-sm shadow-lg shadow-blue-600/20 hover:shadow-xl transition flex items-center justify-center gap-2.5">
+          <i class="fa-solid fa-circle-check text-base"></i> Concluir e Visualizar Currículo Pronto
+        </button>
+      </div>
+
+    </section>
+
+    <!-- Pré-visualização A4 com o Zoom original -->
+    <section id="preview-container" class="lg:col-span-7 flex flex-col items-center overflow-x-auto pb-10 hidden md:flex">
+      
+      <div class="w-[210mm] flex justify-between items-center mb-3 px-1">
+        <button onclick="switchTab('edit')" class="bg-white hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-xl font-bold text-xs md:text-sm border border-slate-300 shadow-sm transition flex items-center gap-2">
+          <i class="fa-solid fa-arrow-left text-slate-500"></i> Voltar e Editar
+        </button>
+        <button onclick="openPaymentModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-xl font-extrabold text-xs md:text-sm shadow-md hover:shadow-lg transition flex items-center gap-2">
+          <i class="fa-solid fa-download"></i> Baixar Currículo em PDF (R$ 1,99)
+        </button>
+      </div>
+
+      <div id="cv-render" class="cv-page">
+        <div class="flex justify-between items-start mb-2">
+          <div class="flex-1 text-center pt-2">
+            <h1 class="text-2xl font-bold tracking-widest uppercase border-b-2 border-black inline-block pb-0.5 mb-1">CURRICULUM VITAE</h1>
+            <h2 id="cv-nome" class="text-lg font-bold mt-1">João da Silva Santos</h2>
+          </div>
+          <div class="ml-4">
+            <img id="cv-photo" src="https://via.placeholder.com/150?text=Foto" alt="Foto 3x4" class="cv-photo-box">
+          </div>
+        </div>
+
+        <div class="cv-section-title">INFORMAÇÕES PESSOAIS</div>
+        <div class="text-[13px] space-y-0.5 px-1">
+          <p><strong>Estado Civil:</strong> <span id="cv-estado-civil">Solteiro</span></p>
+          <p><strong>Nacionalidade:</strong> <span id="cv-nacionalidade">Brasileiro</span></p>
+          <p><strong>Endereço:</strong> <span id="cv-endereco">Rua das Flores, nº 123</span></p>
+          <p><strong>CEP:</strong> <span id="cv-cep">01001-000</span> | <strong>Bairro:</strong> <span id="cv-bairro">Centro</span></p>
+          <p><strong>Telefone:</strong> <span id="cv-telefone">(11) 98765-4321</span> | <strong>E-mail:</strong> <span id="cv-email">joao.silva@exemplo.com</span></p>
+        </div>
+
+        <div class="cv-section-title">Formação Acadêmica</div>
+        <div class="text-[13px] space-y-0.5 px-1">
+          <p><strong>Escolaridade:</strong> <span id="cv-escolaridade-res">Ensino Médio Completo</span></p>
+          <div id="cv-superior-info" style="display: none;">
+            <p><strong>Curso:</strong> <span id="cv-curso-res">Administração</span></p>
+            <p><strong>Instituição:</strong> <span id="cv-inst-res">Universidade Exemplo</span> (<span id="cv-periodo-res">cursando</span>)</p>
+          </div>
+          <p id="cv-cnh-row"><strong>CNH cat:</strong> <span id="cv-cnh" class="font-bold text-red-600">AB</span></p>
+        </div>
+
+        <div class="cv-section-title">Cursos</div>
+        <div id="cv-cursos-render" class="text-[13px] space-y-0.5 px-1"></div>
+
+        <div class="cv-section-title">Experiência profissional</div>
+        <div id="cv-experiencias-render" class="text-[13px] space-y-1.5 px-1"></div>
+
+        <div class="cv-section-title">Objetivo Profissional</div>
+        <div class="text-[13px] px-1 text-justify leading-snug">
+          <p id="cv-objetivo"></p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Modal Pix -->
+  <div id="payment-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 md:p-8 shadow-2xl relative text-center space-y-4 border border-slate-100">
+      <button onclick="closePaymentModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-2"><i class="fa-solid fa-xmark text-xl"></i></button>
+
+      <div class="inline-flex items-center justify-center w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl shadow-inner">
+        <i class="fa-solid fa-pix text-2xl"></i>
+      </div>
+      <div>
+        <h3 class="text-xl font-bold text-slate-900">Liberação de Download (R$ 1,99)</h3>
+        <p class="text-xs text-slate-500 mt-1">Escaneie o QR Code ou copie o código Pix abaixo.</p>
+      </div>
+
+      <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex justify-center items-center min-h-[170px] shadow-inner">
+        <img id="qrcode-img" src="" alt="QR Code Pix" class="w-40 h-40 object-contain hidden rounded-lg" />
+        <div id="qrcode-loading" class="text-xs text-slate-500 flex items-center gap-2 font-medium">
+          <i class="fa-solid fa-spinner fa-spin text-blue-600 text-base"></i> Gerando QR Code seguro...
+        </div>
+      </div>
+
+      <div class="space-y-1.5 text-left">
+        <label class="text-[11px] text-slate-600 font-bold uppercase tracking-wider">Pix Copia e Cola:</label>
+        <div class="flex items-center gap-2">
+          <input type="text" id="pix-key" readonly class="bg-slate-100 text-xs p-3 rounded-xl border border-slate-200 flex-1 outline-none text-slate-700 font-mono select-all" value="Gerando chave...">
+          <button onclick="copyPixKey()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow-sm">
+            <i class="fa-solid fa-copy"></i><span id="copy-btn-text">Copiar</span>
+          </button>
+        </div>
+      </div>
+
+      <button onclick="downloadPDF(); closePaymentModal();" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 rounded-xl font-extrabold text-xs shadow-lg shadow-emerald-600/20 hover:shadow-xl transition flex items-center justify-center gap-2 mt-2">
+        <i class="fa-solid fa-check text-sm"></i> Já fiz o pagamento (Baixar PDF)
+      </button>
+    </div>
+  </div>
+
+  <script>
+    let cursos = ["Informática Básica (40h)", "Atendimento ao Cliente e Vendas"];
+    let experiencias = [
+      { empresa: "Comércio Exemplo Ltda", cargo: "Assistente Administrativo" },
+      { empresa: "Empresa Modelo S.A.", cargo: "Atendente de Loja" }
+    ];
+
+    window.addEventListener('DOMContentLoaded', () => {
+      renderCursosInputs();
+      renderExperienciasInputs();
+      updateCV();
+    });
+
+    function switchTab(tab) {
+      const form = document.getElementById('form-container');
+      const preview = document.getElementById('preview-container');
+      const btnEdit = document.getElementById('tab-edit');
+      const btnPrev = document.getElementById('tab-preview');
+
+      if (tab === 'edit') {
+        form.classList.remove('hidden');
+        preview.classList.add('hidden');
+        preview.classList.remove('flex');
+        btnEdit.className = "flex-1 py-3.5 text-center text-xs font-bold text-blue-600 border-b-2 border-blue-600 flex justify-center items-center gap-2 transition bg-blue-50/50";
+        btnPrev.className = "flex-1 py-3.5 text-center text-xs font-bold text-slate-500 flex justify-center items-center gap-2 transition";
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        form.classList.add('hidden');
+        preview.classList.remove('hidden');
+        preview.classList.add('flex');
+        btnPrev.className = "flex-1 py-3.5 text-center text-xs font-bold text-blue-600 border-b-2 border-blue-600 flex justify-center items-center gap-2 transition bg-blue-50/50";
+        btnEdit.className = "flex-1 py-3.5 text-center text-xs font-bold text-slate-500 flex justify-center items-center gap-2 transition";
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    function handlePhotoUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('cv-photo').src = e.target.result;
+          document.getElementById('form-photo-preview').src = e.target.result;
+        }
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function toggleSuperiorFields() {
+      const escolaridade = document.getElementById('select-escolaridade').value;
+      const supDiv = document.getElementById('superior-fields');
+      if (escolaridade.includes('Superior')) {
+        supDiv.classList.remove('hidden');
+      } else {
+        supDiv.classList.add('hidden');
+      }
+      updateCV();
+    }
+
+    function updateCV() {
+      document.getElementById('cv-nome').innerText = document.getElementById('input-nome').value || 'Seu Nome';
+      document.getElementById('cv-estado-civil').innerText = document.getElementById('input-estado-civil').value;
+      document.getElementById('cv-nacionalidade').innerText = document.getElementById('input-nacionalidade').value;
+      document.getElementById('cv-endereco').innerText = document.getElementById('input-endereco').value;
+      document.getElementById('cv-cep').innerText = document.getElementById('input-cep').value;
+      document.getElementById('cv-bairro').innerText = document.getElementById('input-bairro').value;
+      document.getElementById('cv-telefone').innerText = document.getElementById('input-telefone').value;
+      document.getElementById('cv-email').innerText = document.getElementById('input-email').value;
+
+      const esc = document.getElementById('select-escolaridade').value;
+      document.getElementById('cv-escolaridade-res').innerText = esc;
+
+      const supInfo = document.getElementById('cv-superior-info');
+      if (esc.includes('Superior')) {
+        supInfo.style.display = 'block';
+        document.getElementById('cv-curso-res').innerText = document.getElementById('input-curso-sup').value;
+        document.getElementById('cv-inst-res').innerText = document.getElementById('input-instituicao').value;
+        document.getElementById('cv-periodo-res').innerText = document.getElementById('input-periodo').value;
+      } else {
+        supInfo.style.display = 'none';
+      }
+
+      const cnhVal = document.getElementById('input-cnh').value;
+      document.getElementById('cv-cnh-row').style.display = cnhVal.trim() ? 'block' : 'none';
+      document.getElementById('cv-cnh').innerText = cnhVal;
+
+      document.getElementById('cv-objetivo').innerText = document.getElementById('input-objetivo').value;
+
+      document.getElementById('cv-cursos-render').innerHTML = cursos
+        .filter(c => c.trim() !== '')
+        .map(c => `<p>- ${c}</p>`).join('');
+
+      document.getElementById('cv-experiencias-render').innerHTML = experiencias
+        .filter(e => e.empresa.trim() !== '' || e.cargo.trim() !== '')
+        .map(e => `<p><strong>Empresa:</strong> ${e.empresa} — <strong>Cargo:</strong> ${e.cargo}</p>`).join('');
+    }
+
+    function renderCursosInputs() {
+      document.getElementById('cursos-list').innerHTML = cursos.map((curso, idx) => `
+        <div class="flex gap-2.5 items-center">
+          <input type="text" value="${curso}" oninput="updateCurso(${idx}, this.value)" class="flex-1 p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium outline-none focus:bg-white transition">
+          <button onclick="removeCurso(${idx})" class="text-red-500 hover:text-red-700 p-3 bg-red-50 hover:bg-red-100 rounded-xl transition"><i class="fa-solid fa-trash text-xs"></i></button>
+        </div>
+      `).join('');
+    }
+    function addCurso() { cursos.push(''); renderCursosInputs(); }
+    function updateCurso(idx, val) { cursos[idx] = val; updateCV(); }
+    function removeCurso(idx) { cursos.splice(idx, 1); renderCursosInputs(); updateCV(); }
+
+    function renderExperienciasInputs() {
+      document.getElementById('experiencias-list').innerHTML = experiencias.map((exp, idx) => `
+        <div class="p-3.5 bg-slate-50/80 border border-slate-200 rounded-xl space-y-2.5 relative">
+          <button onclick="removeExperiencia(${idx})" class="absolute top-3 right-3 text-red-500 hover:text-red-700 bg-white p-2 rounded-lg border border-slate-200 shadow-sm text-xs"><i class="fa-solid fa-trash"></i></button>
+          <div><label class="text-[11px] font-bold text-slate-700 mb-1 block">Empresa</label><input type="text" value="${exp.empresa}" oninput="updateExperiencia(${idx}, 'empresa', this.value)" class="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-xs font-medium outline-none"></div>
+          <div><label class="text-[11px] font-bold text-slate-700 mb-1 block">Cargo</label><input type="text" value="${exp.cargo}" oninput="updateExperiencia(${idx}, 'cargo', this.value)" class="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-xs font-medium outline-none"></div>
+        </div>
+      `).join('');
+    }
+    function addExperiencia() { experiencias.push({ empresa: '', cargo: '' }); renderExperienciasInputs(); }
+    function updateExperiencia(idx, field, val) { experiencias[idx][field] = val; updateCV(); }
+    function removeExperiencia(idx) { experiencias.splice(idx, 1); renderExperienciasInputs(); updateCV(); }
+
+    async function openPaymentModal() {
+      document.getElementById('payment-modal').classList.remove('hidden');
+      document.getElementById('pix-key').value = "Gerando chave...";
+      document.getElementById('qrcode-img').classList.add('hidden');
+      document.getElementById('qrcode-loading').classList.remove('hidden');
+      
+      try {
+        const res = await fetch('/api/create-pix', { method: 'POST' });
+        const data = await res.json();
+        if(data.success) {
+          document.getElementById('pix-key').value = data.pix_copia_cola;
+          
+          const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(data.pix_copia_cola)}`;
+          const qrImg = document.getElementById('qrcode-img');
+          qrImg.src = qrUrl;
+          qrImg.onload = () => {
+            document.getElementById('qrcode-loading').classList.add('hidden');
+            qrImg.classList.remove('hidden');
+          };
+        }
+      } catch(e) {
+        alert("Erro ao conectar com o servidor.");
+      }
+    }
+
+    closePaymentModal = () => {
+      document.getElementById('payment-modal').classList.add('hidden');
+    }
+
+    function copyPixKey() {
+      const keyInput = document.getElementById('pix-key');
+      keyInput.select();
+      navigator.clipboard.writeText(keyInput.value);
+      const btnText = document.getElementById('copy-btn-text');
+      btnText.innerText = "Copiado!";
+      setTimeout(() => btnText.innerText = "Copiar", 2000);
+    }
+
+    function downloadPDF() {
+      const element = document.getElementById('cv-render');
+      const nomeCliente = document.getElementById('input-nome').value || 'Curriculo';
+      const opt = {
+        margin: 0,
+        filename: `Curriculo_${nomeCliente.replace(/\s+/g, '_')}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+      html2pdf().set(opt).from(element).save();
+    }
+  </script>
+</body>
+</html>
